@@ -1,14 +1,8 @@
 {
-  "builds": [
-    {
-      "src": "api/telemetry.py",
-      "use": "@vercel/python"
+  "version": 2,
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.11"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/telemetry",
-      "dest": "api/telemetry.py"
-    }
-  ]
+  }
 }
