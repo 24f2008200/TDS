@@ -34,7 +34,7 @@ def p95(values):
     return values[k]
 
 
-@app.post("/telemetry")
+@app.post("/api/telemetry")
 async def telemetry(request: Request):
     payload = await request.json()
     return {"status": "ok"}
