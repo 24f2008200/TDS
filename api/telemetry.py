@@ -34,8 +34,11 @@ def percentile(values, p):
 
 
 # ---- API ----
-@app.post("/api/telemetry")
-def telemetry(payload: dict):
+@app.api_route("/api/telemetry", methods=["POST", "OPTIONS"])
+def telemetry(payload: dict = None):
+    # OPTIONS requests may not have a payload
+    if payload is None:
+        return {}  # just return empty JSON for preflight
     try:
         # ---- Validate input ----
         regions = payload.get("regions")
