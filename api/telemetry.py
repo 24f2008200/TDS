@@ -6,18 +6,18 @@ from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-# ---- CORS headers for all responses ----
+# ---- Safe path to telemetry.json ----
+BASE_DIR = os.path.dirname(__file__)
+TELEMETRY_FILE = os.path.join(BASE_DIR, "..", "telemetry.json")
+
+# ---- CORS headers ----
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
 }
 
-# ---- Safe path to telemetry.json ----
-BASE_DIR = os.path.dirname(__file__)
-TELEMETRY_FILE = os.path.join(BASE_DIR, "..", "telemetry.json")
-
-
+# ---- Helper to compute percentile ----
 def percentile(values, p):
     """Compute the p-th percentile of a list of numbers"""
     if not values:
@@ -30,7 +30,7 @@ def percentile(values, p):
         return values[int(k)]
     return values[f] * (c - k) + values[c] * (k - f)
 
-
+# ---- Telemetry route ----
 @app.api_route("/api/telemetry", methods=["POST", "OPTIONS"])
 def telemetry(request: Request, payload: dict = None):
     # Handle preflight
@@ -82,5 +82,5 @@ def telemetry(request: Request, payload: dict = None):
             "breaches": breaches,
         }
 
-    # Return JSON with CORS headers
+    # Return POST response with CORS headers
     return JSONResponse(content=result, headers=CORS_HEADERS)
