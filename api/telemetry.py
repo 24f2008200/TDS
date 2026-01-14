@@ -34,7 +34,7 @@ def percentile(values, p):
 @app.api_route("/api/telemetry", methods=["POST", "OPTIONS"])
 def telemetry(request: Request, payload: dict = None):
     # Handle preflight
-    return "Im OK"
+
     if request.method == "OPTIONS":
         return JSONResponse(content={}, headers=CORS_HEADERS)
 
