@@ -17,7 +17,7 @@ app.add_middleware(
 
 # Load telemetry data once (serverless-safe: small file)
 BASE_DIR = os.path.dirname(__file__)
-TELEMETRY_FILE = os.path.join(BASE_DIR, "..", "telemetry.json")
+TELEMETRY_FILE = os.path.join(BASE_DIR, "telemetry.json")
 
 with open(TELEMETRY_FILE, "r", encoding="utf-8") as f:
     telemetry_data = json.load(f)
