@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import json
@@ -35,10 +35,17 @@ def percentile(values, p):
 
 # ---- API ----
 @app.api_route("/api/telemetry", methods=["POST", "OPTIONS"])
-def telemetry(payload: dict = None):
-    # OPTIONS requests may not have a payload
-    if payload is None:
-        return {}  # just return empty JSON for preflight
+def telemetry(request: Request, payload: dict = None):
+    # Prepare default CORS headers
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    }
+
+    # Handle OPTIONS preflight
+    if request.method == "OPTIONS":
+        return Response(content="{}", status_code=200, headers=headers)
     try:
         # ---- Validate input ----
         regions = payload.get("regions")
