@@ -9,9 +9,10 @@ app = FastAPI()
 # ---- CORS ----
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["POST"],
-    allow_headers=["*"],
+    allow_origins=["*"],          # allow all origins
+    allow_methods=["*"],          # allow all methods (POST, OPTIONS, GET, etc.)
+    allow_headers=["*"],          # allow all headers
+    allow_credentials=False       # must be False when using "*"
 )
 
 # ---- File path (SAFE for Vercel) ----
