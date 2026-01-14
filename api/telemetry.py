@@ -8,7 +8,7 @@ app = FastAPI()
 
 # ---- Safe path to telemetry.json ----
 BASE_DIR = os.path.dirname(__file__)
-TELEMETRY_FILE = os.path.join(BASE_DIR, "telemetry1.json")
+TELEMETRY_FILE = os.path.join(BASE_DIR, "telemetry.json")
 
 # ---- CORS headers ----
 CORS_HEADERS = {
