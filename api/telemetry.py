@@ -37,7 +37,7 @@ def p95(values):
 @app.post("/api/telemetry")
 async def telemetry(request: Request):
     payload = await request.json()
-    return {"status": "ok"}
+    # return {"status": "ok"}
 
     regions = payload.get("regions", [])
     threshold = payload.get("threshold_ms")
