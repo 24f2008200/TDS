@@ -1,10 +1,14 @@
 {
-  "version": 2,
+  "builds": [
+    {
+      "src": "api/telemetry.py",
+      "use": "@vercel/python"
+    }
+  ],
   "routes": [
     {
       "src": "/api/telemetry",
-      "methods": ["POST", "OPTIONS"],
-      "dest": "/api/telemetry.py"
+      "dest": "api/telemetry.py"
     }
   ]
 }
