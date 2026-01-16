@@ -5,10 +5,16 @@
       "use": "@vercel/python"
     }
   ],
-
+  // "routes": [
+  //   {
+  //     "src": "/api/telemetry",
+  //     "dest": "api/telemetry.py",
+  //     "methods": ["OPTIONS", "POST"]
+  //   }
+  // ],
   "headers": [
     {
-      "source": "/api/telemetry.py",
+      "source": "/api/telemetry",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": " POST, OPTIONS" },
