@@ -12,17 +12,17 @@ BASE_DIR = os.path.dirname(__file__)
 TELEMETRY_FILE = os.path.join(BASE_DIR, "..", "telemetry.json")
 
 # ---- CORS headers ----
-# CORS_HEADERS = {
-#     "Access-Control-Allow-Origin": "*",
-#     "Access-Control-Allow-Methods": "POST, OPTIONS",
-#     "Access-Control-Allow-Headers": "Content-Type",
-# }
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["POST, OPTIONS"],
-    allow_headers=["*"],
-)
+CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+}
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_methods=["POST, OPTIONS"],
+#     allow_headers=["*"],
+# )
 # ---- Helper to compute percentile ----
 def percentile(values, p):
     """Compute the p-th percentile of a list of numbers"""
