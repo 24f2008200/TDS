@@ -3,6 +3,7 @@ import json
 import math
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -16,7 +17,12 @@ CORS_HEADERS = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
 }
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["POST, OPTIONS"],
+    allow_headers=["*"],
+)
 # ---- Helper to compute percentile ----
 def percentile(values, p):
     """Compute the p-th percentile of a list of numbers"""
