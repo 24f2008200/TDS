@@ -8,7 +8,7 @@
 
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/telemetry.py",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": " POST, OPTIONS" },
