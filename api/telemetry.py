@@ -12,11 +12,11 @@ BASE_DIR = os.path.dirname(__file__)
 TELEMETRY_FILE = os.path.join(BASE_DIR, "..", "telemetry.json")
 
 # ---- CORS headers ----
-CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-}
+# CORS_HEADERS = {
+#     "Access-Control-Allow-Origin": "*",
+#     "Access-Control-Allow-Methods": "POST, OPTIONS",
+#     "Access-Control-Allow-Headers": "Content-Type",
+# }
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
