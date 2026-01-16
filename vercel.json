@@ -8,7 +8,7 @@
 
 "routes": [
     {
-      "src": "/api/telemetry",
+      "src": "/(.*)",
       "dest": "api/telemetry.py",
       "methods": ["OPTIONS", "POST"]
     }]
