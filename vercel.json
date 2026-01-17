@@ -10,6 +10,5 @@
     {
       "src": "/(.*)",
       "dest": "api/telemetry.py",
-      "methods": ["OPTIONS", "POST"]
     }]
 }
