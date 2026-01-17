@@ -9,6 +9,6 @@
 "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/telemetry.py",
+      "dest": "api/telemetry.py"
     }]
 }
