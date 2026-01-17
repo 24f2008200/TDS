@@ -38,7 +38,8 @@ def percentile(values, p):
     return values[f] * (c - k) + values[c] * (k - f)
 
 # ---- Telemetry route ----
-@app.api_route("/api/telemetry", methods=["POST", "OPTIONS"])
+# @app.api_route("/api/telemetry", methods=["POST", "OPTIONS"])
+@app.api_route("/api/telemetry")
 def telemetry(request: Request, payload: dict = None):
     # Handle preflight
     print (request.method)
