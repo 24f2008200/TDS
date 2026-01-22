@@ -93,4 +93,8 @@ def telemetry(request: Request, payload: dict = None):
         }
 
     # Return POST response with CORS headers
-    return JSONResponse(content=result, headers=CORS_HEADERS)
+    return JSONResponse(
+    content={"regions": result},
+    headers=CORS_HEADERS
+)
+
