@@ -69,7 +69,7 @@ def telemetry(request: Request, payload: dict = None):
     for region in regions:
         region_records = [r for r in records if r.get("region") == region]
         latencies = [r.get("latency_ms") for r in region_records if "latency_ms" in r]
-        uptimes = [r.get("uptime") for r in region_records if "uptime" in r]
+        uptimes = [r.get("uptime_pct") for r in region_records if "uptime_pct" in r]
 
         if not latencies:
             result[region] = {
