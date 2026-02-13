@@ -160,3 +160,111 @@ You enter:
 https://github.com/<your-username>/<repo-name>
 ```
 --------
+# Q5
+Perfect. Even simpler. 🐍✨
+
+If your file is just a **Python list of dictionaries** like:
+
+```python
+products = [
+    { "id": "...", "name": "...", ... },
+    ...
+]
+```
+
+then we don’t need JSON parsing at all. We’ll:
+
+1. Import the list
+2. Compute aggregations
+3. Generate a proper JSON file with metadata + products + aggregations
+
+Clean. Deterministic. Validator-proof.
+
+---
+
+# ✅ Suppose your file is named `products.py`
+
+Example structure:
+
+```python
+products = [
+    {
+        "id": "prod-0746bb7b-001",
+        "name": "Basic Item 1",
+        "category": "home",
+        "price": 166.19,
+        "stock": 15,
+        "rating": 2
+    },
+    ...
+]
+```
+
+---
+
+# ✅ Create This Script: `generate_catalog_json.py`
+
+```python
+import json
+from collections import defaultdict
+from products import products  # importing your list
+
+OUTPUT_FILE = "catalog.json"
+
+counts = defaultdict(int)
+inventory_values = defaultdict(float)
+
+# Compute aggregations
+for product in products:
+    category = product["category"]
+    price = product["price"]
+    stock = product["stock"]
+
+    counts[category] += 1
+    inventory_values[category] += price * stock
+
+# Build final structure
+catalog = {
+    "metadata": {
+        "email": "24f2008200@ds.study.iitm.ac.in",
+        "version": "0746bb7b"
+    },
+    "products": products,
+    "aggregations": {}
+}
+
+for category in counts:
+    catalog["aggregations"][category] = {
+        "count": counts[category],
+        "inventoryValue": inventory_values[category]
+    }
+
+# Write JSON
+with open(OUTPUT_FILE, "w") as f:
+    json.dump(catalog, f, indent=2)
+
+print("catalog.json generated successfully.")
+```
+
+---
+
+# ▶ Run It
+
+```bash
+python generate_catalog_json.py
+```
+
+It will generate:
+
+```
+catalog.json
+```
+
+Upload that to GitHub Pages.
+
+---
+
+If you want ultra-precise decimal math instead of float (to perfectly match weird `81144.56999999999` cases), I can switch this to `Decimal` and guarantee bit-level consistency.
+
+----------------
+
