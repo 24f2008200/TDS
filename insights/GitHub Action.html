@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Actions Caching – Complete Guide Q7</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+
+  :root {
+    --bg:       #0d0f14;
+    --surface:  #13161e;
+    --card:     #1a1e2a;
+    --border:   #252b3b;
+    --accent:   #4ade80;
+    --accent2:  #60a5fa;
+    --accent3:  #f472b6;
+    --warn:     #fb923c;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --code-bg:  #0f1117;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', Georgia, serif;
+    font-size: 15px;
+    line-height: 1.75;
+    padding: 0 0 80px;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    padding: 64px 40px 48px;
+    max-width: 900px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+  }
+  header .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+  header h1 span { color: var(--accent2); }
+  header p { color: var(--muted); max-width: 620px; }
+
+  /* ─── LAYOUT ─── */
+  main { max-width: 900px; margin: 0 auto; padding: 0 40px; }
+
+  /* ─── SECTION TITLES ─── */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 56px 0 24px;
+  }
+  .section-title .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    border: 1px solid var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .section-title h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+  }
+  .card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .card p { color: #94a3b8; }
+
+  /* ─── GRID ─── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ─── DO / DON'T TABLE ─── */
+  .do-dont {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 640px) { .do-dont { grid-template-columns: 1fr; } }
+  .do-dont .col-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .do-dont .col-header.do   { background: rgba(74,222,128,.08); color: var(--accent); }
+  .do-dont .col-header.dont { background: rgba(244,114,182,.08); color: var(--accent3); border-left: 1px solid var(--border); }
+  .do-dont .col-body { padding: 20px; background: var(--card); }
+  .do-dont .col-body.dont { border-left: 1px solid var(--border); }
+  .do-dont .col-body li {
+    list-style: none;
+    color: #94a3b8;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .do-dont .col-body li:last-child { border-bottom: none; }
+  .do-dont .col-body li::before {
+    margin-right: 8px;
+    font-size: 14px;
+  }
+  .do-dont .col-body.do   li::before { content: '✓'; color: var(--accent); }
+  .do-dont .col-body.dont li::before { content: '✗'; color: var(--accent3); }
+
+  /* ─── CODE ─── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+  }
+  .cm  { color: var(--muted); }       /* comment */
+  .kw  { color: var(--accent2); }     /* keyword */
+  .st  { color: var(--accent); }      /* string / value */
+  .nm  { color: var(--warn); }        /* name */
+  .hl  { color: var(--accent3); }     /* highlight */
+
+  /* ─── INLINE CODE ─── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(96,165,250,.12);
+    color: var(--accent2);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ─── PILL TAGS ─── */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .tag.green { background: rgba(74,222,128,.12); color: var(--accent); border: 1px solid rgba(74,222,128,.25); }
+  .tag.blue  { background: rgba(96,165,250,.12);  color: var(--accent2); border: 1px solid rgba(96,165,250,.25); }
+  .tag.pink  { background: rgba(244,114,182,.12); color: var(--accent3); border: 1px solid rgba(244,114,182,.25); }
+  .tag.warn  { background: rgba(251,146,60,.12);  color: var(--warn);    border: 1px solid rgba(251,146,60,.25); }
+
+  /* ─── FLOW DIAGRAM ─── */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .flow-step {
+    flex: 1;
+    padding: 18px 16px;
+    background: var(--card);
+    text-align: center;
+    position: relative;
+  }
+  .flow-step + .flow-step { border-left: 1px solid var(--border); }
+  .flow-step .icon { font-size: 24px; display: block; margin-bottom: 6px; }
+  .flow-step .step-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .flow-step .step-desc { font-size: 11.5px; color: var(--muted); }
+
+  /* ─── ALERT BOX ─── */
+  .alert {
+    border-left: 3px solid var(--warn);
+    background: rgba(251,146,60,.06);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+    color: #cbd5e1;
+  }
+  .alert strong { color: var(--warn); font-family: 'Syne', sans-serif; }
+
+  /* ─── TROUBLESHOOTING ─── */
+  .issue {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .issue-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: rgba(244,114,182,.05);
+    border-bottom: 1px solid var(--border);
+  }
+  .issue-header .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: rgba(244,114,182,.15);
+    color: var(--accent3);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .issue-header h4 { font-family: 'Syne', sans-serif; font-size: 14px; color: #fff; }
+  .issue-body { padding: 14px 18px; background: var(--card); font-size: 13.5px; color: #94a3b8; }
+  .issue-body strong { color: var(--accent2); font-family: 'Syne', sans-serif; }
+
+  /* ─── WORKFLOW BOX ─── */
+  .workflow-box {
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .workflow-box .wf-header {
+    background: rgba(74,222,128,.08);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .workflow-box .wf-header span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .workflow-box pre {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">// GitHub Actions  ·  CI Optimization</div>
+  <h1>Dependency Caching<br><span>Complete Field Guide</span></h1>
+  <p>Everything you need to know about GitHub Actions caching — concepts, controls, cache-busting, troubleshooting, and a ready-to-use workflow.</p>
+</header>
+
+<main>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 1 – WHAT IS CACHING?
+  ══════════════════════════════════════════════ -->
+  <div class="section-title">
+    <div class="num">01</div>
+    <h2>What is Caching in GitHub Actions?</h2>
+  </div>
+
+  <div class="card">
+    <h3>The Core Idea</h3>
+    <p>
+      Each GitHub Actions job runs in a <strong>fresh, ephemeral runner</strong> — nothing persists between runs.
+      Without caching, tools like <code>npm ci</code> or <code>pip install</code> re-download every dependency
+      from the internet on every single run. The <code>actions/cache</code> action saves a compressed archive
+      of a directory to <strong>GitHub's cache storage</strong> (up to 10 GB per repo) after a job completes,
+      and restores it at the start of the next matching run — often turning a 3-minute install into a 15-second restore.
+    </p>
+  </div>
+
+  <!-- Flow diagram -->
+  <div class="flow">
+    <div class="flow-step">
+      <span class="icon">🔑</span>
+      <div class="step-label">Key lookup</div>
+      <div class="step-desc">Hash of lock file computed → checked against stored cache keys</div>
+    </div>
+    <div class="flow-step">
+      <span class="icon">💾</span>
+      <div class="step-label">Restore</div>
+      <div class="step-desc">On HIT: archive is decompressed into path. On MISS: path is empty</div>
+    </div>
+    <div class="flow-step">
+      <span class="icon">⚙️</span>
+      <div class="step-label">Build / Test</div>
+      <div class="step-desc">Job runs normally; install step can be skipped on hit</div>
+    </div>
+    <div class="flow-step">
+      <span class="icon">📦</span>
+      <div class="step-label">Save</div>
+      <div class="step-desc">If key was new, path is compressed and uploaded to cache storage</div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:36px">
+    <div class="num">01a</div>
+    <h2>What Should You Cache vs. Avoid?</h2>
+  </div>
+
+  <div class="do-dont">
+    <div class="col-header do">✓ Cache these</div>
+    <div class="col-header dont">✗ Never cache these</div>
+    <div class="col-body do">
+      <ul>
+        <li>npm / yarn dependency folders (<code>node_modules</code>, <code>~/.npm</code>)</li>
+        <li>pip / poetry package caches (<code>~/.cache/pip</code>)</li>
+        <li>Maven / Gradle local repos</li>
+        <li>Cargo registry &amp; target artifacts</li>
+        <li>Go module cache (<code>~/go/pkg/mod</code>)</li>
+        <li>Ruby gems (<code>vendor/bundle</code>)</li>
+        <li>Compiled build outputs that are reused across runs</li>
+        <li>Tool binaries (e.g., Terraform, Helm, custom CLIs)</li>
+      </ul>
+    </div>
+    <div class="col-body dont">
+      <ul>
+        <li>Secrets, tokens, API keys — ever</li>
+        <li>Credentials files (<code>.npmrc</code> with auth tokens)</li>
+        <li>Generated build artifacts that must stay fresh every run</li>
+        <li>Test results or coverage reports (use artifact upload instead)</li>
+        <li>Extremely large files &gt; 10 GB (GitHub cache limit)</li>
+        <li>Fast-to-generate files (caching overhead &gt; benefit)</li>
+        <li>Files that must always reflect latest state (lock files themselves)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert">
+    <strong>⚠ Security note:</strong> The cache is stored server-side and scoped to the repository. Contents are
+    accessible to any workflow in the same repo. Never let sensitive credentials end up in a cached path.
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 2 – CONTROLLING THE CACHE
+  ══════════════════════════════════════════════ -->
+  <hr>
+
+  <div class="section-title">
+    <div class="num">02</div>
+    <h2>Controlling What to Cache &amp; For How Long</h2>
+  </div>
+
+  <div class="card">
+    <h3>The <code>key</code> — your primary handle</h3>
+    <p>
+      The cache key uniquely identifies a cache entry. Use <strong>dynamic expressions</strong> so the key
+      changes only when your dependencies actually change. A hash of the lock file is the gold standard:
+    </p>
+  </div>
+
+  <pre><span class="cm"># The primary key — a cache miss triggers a new save at the end of the job</span>
+<span class="kw">key:</span> <span class="st">cache-8790bb4-${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}</span>
+
+<span class="cm"># restore-keys are ordered fallbacks (partial match, oldest-to-newest wins)</span>
+<span class="kw">restore-keys:</span> |
+  <span class="st">cache-8790bb4-${{ runner.os }}-node-</span>
+  <span class="st">cache-8790bb4-${{ runner.os }}-</span></pre>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Key expressions you can use</h3>
+      <div class="tags">
+        <span class="tag green">hashFiles('**/lock')</span>
+        <span class="tag blue">runner.os</span>
+        <span class="tag blue">github.ref</span>
+        <span class="tag pink">github.sha</span>
+        <span class="tag warn">env.MY_VAR</span>
+      </div>
+      <p style="margin-top:12px">Combine them with literals to scope the cache precisely. More specificity = fewer false hits.</p>
+    </div>
+    <div class="card">
+      <h3>TTL &amp; eviction policy</h3>
+      <p>GitHub <strong>auto-evicts</strong> cache entries not accessed in the last <strong>7 days</strong>.
+      Total storage is capped at <strong>10 GB per repository</strong>. Oldest least-recently-used entries
+      are pruned first when the limit is hit. There is no manual TTL setting.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>All <code>actions/cache@v4</code> inputs you can control</h3>
+    <p style="margin-bottom:12px">Beyond <code>key</code> and <code>restore-keys</code>, you have:</p>
+    <div class="tags">
+      <span class="tag green">path</span>
+      <span class="tag blue">save-always</span>
+      <span class="tag blue">fail-on-cache-miss</span>
+      <span class="tag pink">enableCrossOsArchive</span>
+      <span class="tag warn">lookup-only</span>
+    </div>
+    <p style="margin-top:12px">
+      <code>save-always: true</code> — saves the cache even when the job fails (great for debugging).<br>
+      <code>fail-on-cache-miss: true</code> — turns a miss into a hard failure (use in restore-only steps).<br>
+      <code>lookup-only: true</code> — checks for existence without downloading (to make conditional decisions).<br>
+      <code>enableCrossOsArchive: true</code> — share a cache entry across Linux/macOS/Windows runners.
+    </p>
+  </div>
+
+  <pre><span class="cm"># Full example with all major inputs</span>
+- <span class="kw">uses:</span> <span class="st">actions/cache@v4</span>
+  <span class="kw">with:</span>
+    <span class="kw">path:</span> |
+      <span class="st">~/.npm</span>
+      <span class="st">node_modules</span>
+    <span class="kw">key:</span>  <span class="st">cache-8790bb4-${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}</span>
+    <span class="kw">restore-keys:</span> <span class="st">cache-8790bb4-${{ runner.os }}-node-</span>
+    <span class="kw">save-always:</span> <span class="st">true</span>
+    <span class="kw">fail-on-cache-miss:</span> <span class="st">false</span></pre>
+
+  <div class="card">
+    <h3>Output: <code>cache-hit</code></h3>
+    <p>The action sets an output variable <code>cache-hit</code>. When <code>'true'</code>, the exact primary
+    key matched. When <code>'false'</code> (or empty), a fallback or no cache was used.
+    Reference it as <code>${{ steps.&lt;id&gt;.outputs.cache-hit }}</code>.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 3 – BUSTING & TROUBLESHOOTING
+  ══════════════════════════════════════════════ -->
+  <hr>
+
+  <div class="section-title">
+    <div class="num">03</div>
+    <h2>Cache Busting, Common Issues &amp; Monitoring</h2>
+  </div>
+
+  <div class="card">
+    <h3>How to Bust the Cache</h3>
+    <p style="margin-bottom:12px">There is no single "invalidate now" button, but you have several techniques:</p>
+    <ol style="padding-left:20px;color:#94a3b8;font-size:13.5px;line-height:2">
+      <li><strong style="color:#fff">Change the key</strong> — add a manual version segment (e.g. <code>v2-</code>) to the key string and push. The old cache is immediately orphaned.</li>
+      <li><strong style="color:#fff">GitHub UI / API</strong> — go to <em>Actions → Management → Caches</em> and delete specific entries by key or branch. Or use the REST API: <code>DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}</code>.</li>
+      <li><strong style="color:#fff">GitHub CLI</strong> — <code>gh cache delete &lt;key&gt;</code> or <code>gh cache list</code> to audit.</li>
+      <li><strong style="color:#fff">Update the lock file</strong> — running <code>npm install</code> changes <code>package-lock.json</code>, so the hash changes automatically and a new cache is created.</li>
+    </ol>
+  </div>
+
+  <!-- Issues -->
+  <div class="issue">
+    <div class="issue-header">
+      <span class="badge">ISSUE 01</span>
+      <h4>Cache always misses even though nothing changed</h4>
+    </div>
+    <div class="issue-body">
+      <strong>Causes:</strong> The lock file path glob is wrong, <code>runner.os</code> differs across job types,
+      or a prior step modifies the file before the hash is computed.<br>
+      <strong>Fix:</strong> Print <code>hashFiles('**/package-lock.json')</code> by running
+      <code>echo ${{ hashFiles('**/package-lock.json') }}</code> in a debug step. Make sure checkout happens before the cache step.
+    </div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-header">
+      <span class="badge">ISSUE 02</span>
+      <h4>Stale / corrupted dependencies despite a cache hit</h4>
+    </div>
+    <div class="issue-body">
+      <strong>Cause:</strong> The cache key didn't change but the actual dependencies did (e.g., you edited
+      <code>package.json</code> without running <code>npm install</code> to update the lock file).<br>
+      <strong>Fix:</strong> Always commit the lock file. Run <code>npm ci</code> (which uses the lock) rather than
+      <code>npm install</code> (which may resolve differently). Or add a cache-busting prefix to the key.
+    </div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-header">
+      <span class="badge">ISSUE 03</span>
+      <h4>Cache size exceeds 10 GB limit</h4>
+    </div>
+    <div class="issue-body">
+      <strong>Cause:</strong> Too many cache entries accumulate (many branches × many dependency versions).<br>
+      <strong>Fix:</strong> Use <code>restore-keys</code> to share caches across branches. Delete stale entries
+      via the UI or the GitHub CLI. Consider caching only the package manager's global cache
+      (<code>~/.npm</code>) rather than <code>node_modules</code> itself.
+    </div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-header">
+      <span class="badge">ISSUE 04</span>
+      <h4>Cache is not saved when the job fails</h4>
+    </div>
+    <div class="issue-body">
+      <strong>Cause:</strong> By default, caches are only saved when the job succeeds.<br>
+      <strong>Fix:</strong> Set <code>save-always: true</code> in the cache action's <code>with</code> block.
+      Useful when you want to prime the cache even during failing test runs for faster iteration.
+    </div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-header">
+      <span class="badge">ISSUE 05</span>
+      <h4>Cache hit but install still takes long</h4>
+    </div>
+    <div class="issue-body">
+      <strong>Cause:</strong> You're caching <code>~/.npm</code> (the global npm cache) but still running
+      <code>npm ci</code>, which re-links all modules from the cache to <code>node_modules</code>.<br>
+      <strong>Fix:</strong> Cache <code>node_modules</code> directly and skip the install step on a hit:
+      <code>if: steps.cache.outputs.cache-hit != 'true'</code>. Trade-off: <code>node_modules</code> archives
+      are larger.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Monitoring &amp; Observability</h3>
+    <p>
+      <strong style="color:#fff">GitHub UI:</strong> <em>Repository → Actions → Management → Caches</em> shows all active
+      cache entries, their size, last-accessed date, and the branch/key that created them.<br><br>
+      <strong style="color:#fff">Workflow logs:</strong> The <code>actions/cache</code> step always prints whether it got a
+      hit or miss and which key matched. Expand the step in the run log.<br><br>
+      <strong style="color:#fff">GitHub CLI:</strong> <code>gh cache list</code> (with <code>--json key,sizeInBytes,createdAt</code>
+      for scripting). Use <code>gh cache delete</code> to clean up programmatically.<br><br>
+      <strong style="color:#fff">REST API:</strong> <code>GET /repos/{owner}/{repo}/actions/caches</code> returns a
+      paginated list with metadata you can pipe into dashboards or Slack alerts.
+    </p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 4 – THE WORKFLOW
+  ══════════════════════════════════════════════ -->
+  <hr>
+
+  <div class="section-title">
+    <div class="num">04</div>
+    <h2>The Assignment Workflow</h2>
+  </div>
+
+  <p style="color:#94a3b8;margin-bottom:20px">
+    Save this file as <code>.github/workflows/cache-demo.yml</code> in your repository.
+    It uses <code>actions/cache@v4</code>, the required key prefix <code>cache-8790bb4</code>,
+    and a step named <code>prime-cache-8790bb4</code> that echoes the hit/miss result.
+  </p>
+
+  <div class="workflow-box">
+    <div class="wf-header">
+      <span>📄 .github/workflows/cache-demo.yml</span>
+    </div>
+    <pre>
+<span class="nm">name:</span> <span class="st">CI with Dependency Caching</span>
+
+<span class="nm">on:</span>
+  <span class="nm">push:</span>
+    <span class="nm">branches:</span> <span class="st">[main, master]</span>
+  <span class="nm">pull_request:</span>
+    <span class="nm">branches:</span> <span class="st">[main, master]</span>
+  <span class="nm">workflow_dispatch:</span>
+
+<span class="nm">jobs:</span>
+  <span class="nm">build:</span>
+    <span class="nm">runs-on:</span> <span class="st">ubuntu-latest</span>
+
+    <span class="nm">steps:</span>
+      - <span class="nm">name:</span> <span class="st">Checkout repository</span>
+        <span class="nm">uses:</span> <span class="st">actions/checkout@v4</span>
+
+      <span class="cm"># ── 1. Restore or prime the cache ──────────────</span>
+      - <span class="nm">name:</span> <span class="st">Cache Node.js dependencies</span>
+        <span class="nm">id:</span> <span class="st">cache-node</span>
+        <span class="nm">uses:</span> <span class="st">actions/cache@v4</span>
+        <span class="nm">with:</span>
+          <span class="nm">path:</span> |
+            <span class="st">~/.npm</span>
+            <span class="st">node_modules</span>
+          <span class="nm">key:</span> <span class="st">cache-8790bb4-${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}</span>
+          <span class="nm">restore-keys:</span> |
+            <span class="st">cache-8790bb4-${{ runner.os }}-node-</span>
+            <span class="st">cache-8790bb4-${{ runner.os }}-</span>
+
+      <span class="cm"># ── 2. Required: prime-cache-8790bb4 ───────────</span>
+      - <span class="nm">name:</span> <span class="st">prime-cache-8790bb4</span>
+        <span class="nm">run:</span> |
+          <span class="st">echo "Cache hit result: ${{ steps.cache-node.outputs.cache-hit }}"</span>
+          <span class="kw">if</span> <span class="st">[ "${{ steps.cache-node.outputs.cache-hit }}" == "true" ]</span>; <span class="kw">then</span>
+            <span class="st">echo "✅ Cache HIT  – deps restored from cache (key: cache-8790bb4)"</span>
+          <span class="kw">else</span>
+            <span class="st">echo "⚠️ Cache MISS – will install fresh and prime cache"</span>
+          <span class="kw">fi</span>
+
+      <span class="cm"># ── 3. Install only on cache miss ───────────────</span>
+      - <span class="nm">name:</span> <span class="st">Install dependencies</span>
+        <span class="nm">if:</span> <span class="st">steps.cache-node.outputs.cache-hit != 'true'</span>
+        <span class="nm">run:</span> <span class="st">echo "npm ci  ← replace with your real install command"</span>
+
+      <span class="cm"># ── 4. Build & Test (placeholder) ────────────────</span>
+      - <span class="nm">name:</span> <span class="st">Build</span>
+        <span class="nm">run:</span> <span class="st">echo "Build step runs with cached/fresh deps"</span>
+
+      - <span class="nm">name:</span> <span class="st">Test</span>
+        <span class="nm">run:</span> <span class="st">echo "Test step – add your real test command here"</span>
+</pre>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>First run behaviour</h3>
+      <p>The cache doesn't exist yet → <strong>MISS</strong>. Install runs, then the cache is uploaded after the job succeeds. <code>prime-cache-8790bb4</code> will print <em>"Cache MISS"</em>.</p>
+    </div>
+    <div class="card">
+      <h3>Second run behaviour</h3>
+      <p>Lock file unchanged → key matches → <strong>HIT</strong>. Dependencies are restored in ~15 s, install is skipped. <code>prime-cache-8790bb4</code> will print <em>"Cache HIT"</em>.</p>
+    </div>
+  </div>
+
+  <div class="alert">
+    <strong>📌 Checklist before you push:</strong> (1) Replace the placeholder <code>npm ci</code> echo with your real install command. (2) Adjust the <code>path</code> values to match your stack. (3) Make sure a <code>package-lock.json</code> (or equivalent) exists — otherwise <code>hashFiles</code> returns an empty string and the key degrades to a constant.
+  </div>
+
+</main>
+</body>
+</html>
