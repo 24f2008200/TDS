@@ -1,0 +1,51 @@
+name: CI with Dependency Caching
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 1. Restore or prime the cache ──────────────
+      - name: Cache Node.js dependencies
+        id: cache-node
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: cache-8790bb4-${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            cache-8790bb4-${{ runner.os }}-node-
+            cache-8790bb4-${{ runner.os }}-
+
+      # ── 2. Required: prime-cache-8790bb4 ───────────
+      - name: prime-cache-8790bb4
+        run: |
+          echo "Cache hit result: ${{ steps.cache-node.outputs.cache-hit }}"
+          if [ "${{ steps.cache-node.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Cache HIT  – deps restored from cache (key: cache-8790bb4)"
+          else
+            echo "⚠️ Cache MISS – will install fresh and prime cache"
+          fi
+
+      # ── 3. Install only on cache miss ───────────────
+      - name: Install dependencies
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: echo "npm ci  ← replace with your real install command"
+
+      # ── 4. Build & Test (placeholder) ────────────────
+      - name: Build
+        run: echo "Build step runs with cached/fresh deps"
+
+      - name: Test
+        run: echo "Test step – add your real test command here"
