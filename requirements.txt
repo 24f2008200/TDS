@@ -1,6 +1,6 @@
 fastapi
 requests==2.31.0
 pandas==1.5.3
-uvicorn==0.22.0
+uvicorn==0.40.0
 
 
