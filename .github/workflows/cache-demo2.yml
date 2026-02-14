@@ -1,0 +1,48 @@
+name: CI with Dependency Caching
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 1. Restore or prime the cache ──────────────
+      - name: Cache pip dependencies
+        id: cache-node
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: cache-8790bb4-${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            cache-8790bb4-${{ runner.os }}-pip-
+            cache-8790bb4-${{ runner.os }}-
+
+      # ── 2. Required: prime-cache-8790bb4 ───────────
+      - name: prime-cache-8790bb4
+        run: |
+          echo "Cache hit result: ${{ steps.cache-node.outputs.cache-hit }}"
+          if [ "${{ steps.cache-node.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Cache HIT  – deps restored from cache (key: cache-8790bb4)"
+          else
+            echo "⚠️ Cache MISS – will install fresh and prime cache"
+          fi
+
+      # ── 3. Install dependencies ─────────────────────
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── 4. Build & Test ─────────────────────────────
+      - name: Build
+        run: echo "✅ Build complete (demo)"
+
+      - name: Test
+        run: python -c "import requests; print('requests version:', requests.__version__)"
