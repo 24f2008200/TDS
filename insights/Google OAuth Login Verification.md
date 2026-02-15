@@ -129,3 +129,92 @@ Example payload claims:
   "iat": 1699996400
 }
 ```
+
+
+
+No worries! Let me walk you through it from scratch, step by step.
+
+---
+
+## Step 1 — Go to Google Cloud Console
+
+Go to: **https://console.cloud.google.com**
+
+Sign in with your **personal** Google account (not the `@ds.study.iitm.ac.in` one).
+
+---
+
+## Step 2 — Create a New Project
+
+- Click the project dropdown at the **top left** (it might say "Select a project")
+- Click **"New Project"**
+- Name it something like `eShopCo Portal`
+- Click **"Create"**
+- Wait a few seconds, then make sure that new project is selected in the dropdown
+
+---
+
+## Step 3 — Configure OAuth Consent Screen
+
+Before creating credentials, Google requires you to set up a consent screen.
+
+- In the left sidebar go to **APIs & Services → OAuth consent screen**
+- Choose **External** → click **Create**
+- Fill in the required fields:
+  - App name: `eShopCo Portal`
+  - User support email: your personal Gmail
+  - Developer contact email: your personal Gmail
+- Click **Save and Continue**
+- On the **Scopes** page → just click **Save and Continue** (no changes needed)
+- On the **Test users** page → click **+ Add Users** and add `24f2008200@ds.study.iitm.ac.in`
+- Click **Save and Continue**
+
+> ⚠️ Adding that email as a test user is important — since the app is in "testing" mode, only listed users can log in.
+
+---
+
+## Step 4 — Create the OAuth 2.0 Client ID
+
+- Go to **APIs & Services → Credentials**
+- Click **+ Create Credentials → OAuth 2.0 Client ID**
+- Application type: **Web application**
+- Name: `eShopCo Web Client` (anything is fine)
+- Under **Authorized redirect URIs** click **+ Add URI** and enter:
+  ```
+  http://localhost:8000/auth/callback
+  ```
+- Click **Create**
+
+A popup will show your **Client ID** and **Client Secret** — copy both immediately.
+
+---
+
+## Step 5 — Put them in your `.env` file
+
+Open the `.env` file in your project and replace the placeholders:
+
+```
+GOOGLE_CLIENT_ID=paste-your-client-id-here.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=paste-your-client-secret-here
+SESSION_SECRET=anyrandomlongstring123
+ALLOWED_DOMAIN=ds.study.iitm.ac.in
+```
+
+Then **restart** your FastAPI app:
+```bash
+python main.py
+```
+
+---
+
+## Step 6 — Try logging in again
+
+Visit `http://localhost:8000`, click Sign in with Google, and this time use `24f2008200@ds.study.iitm.ac.in`.
+
+---
+
+Let me know which step you get stuck on and I'll help you through it!
+
+
+
+
