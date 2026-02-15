@@ -215,3 +215,51 @@ For production, you'd create a **named tunnel** with a custom domain.
 ---
 
 Would you like me to dive deeper into any specific aspect, like setting up named tunnels, configuring Access policies, or comparing specific alternatives?
+
+
+I'll guide you through setting up a Cloudflare Tunnel step-by-step. Since network access is disabled in this environment, I'll provide you with complete instructions to run on your local machine.
+
+## **Complete Setup Guide**
+
+### **Step 1: Create the HTML Dashboard**
+
+First, create a simple dashboard file:Now let me create a comprehensive step-by-step guide document for you:Perfect! I've created complete setup guides for you. Here's what you need to do:
+
+## **Quick Start (3 Steps)**
+
+**Step 1: Install cloudflared**
+- **macOS:** `brew install cloudflare/cloudflare/cloudflared`
+- **Linux:** Download from the GitHub releases page
+- **Windows:** `choco install cloudflared`
+
+**Step 2: Start web server**
+```bash
+# Save the index.html file I provided, then:
+cd /path/to/directory/with/index.html
+python3 -m http.server 5000
+```
+
+**Step 3: Create tunnel (in NEW terminal)**
+```bash
+cloudflared tunnel --url http://localhost:5000
+```
+
+**You'll get a URL like:** `https://bitter-snowflake-9x2k.trycloudflare.com`
+
+---
+
+## **What You Get**
+
+I've provided you with:
+
+1. **Complete Setup Guide** - Detailed instructions for every OS with troubleshooting
+2. **Quick Reference** - Command cheat sheet for daily use  
+3. **HTML Dashboard** - A beautiful demo page to test with
+
+The tunnel URL will appear in your terminal after running the cloudflared command. Look for the line with `https://` ending in `.trycloudflare.com` - that's your public URL!
+
+---
+
+## **Note About This Environment**
+
+Since network access is disabled in this Claude interface, I cannot actually run cloudflared here, but the guides will work perfectly on your local machine. Just follow the steps in the setup guide!
