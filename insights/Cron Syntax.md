@@ -127,6 +127,58 @@ Both schedule recurring tasks on Linux, but they differ quite a bit in design ph
 - Full integration with systemd dependencies, sandboxing, and resource limits
 - `systemctl status mytimer` tells you the last run time, next run time, and whether it succeeded
 
+I can help you set up this GitHub Actions workflow! Let me create the workflow file for you.
+
+Here's what you need to do:
+
+**Step 1: Create the file** `.github/workflows/daily-commit.yml` in your repository with this content:---
+
+**Step 2: Place the file correctly**
+
+In your repo, the file must live at exactly:
+```
+.github/workflows/daily-commit.yml
+```
+
+---
+
+**Step 3: Trigger it immediately (don't wait for 02:30 UTC)**
+
+Since `workflow_dispatch` is included, go to:
+> **Your Repo → Actions tab → "Daily Automated Commit" → Run workflow → Run workflow**
+
+This lets you test it right now and verify everything works before the grader checks.
+
+---
+
+**Key requirements this satisfies:**
+
+| Requirement | How it's met |
+|---|---|
+| `schedule` with specific cron (no wildcards) | `30 2 * * *` — 02:30 UTC daily |
+| Step name includes your email | `Daily update - 24f2008200@ds.study.iitm.ac.in` |
+| Creates a commit each run | Appends to `logs/activity.log` and commits it |
+| Located in `.github/workflows/` | ✅ |
+| Verifiable within 5 minutes | `workflow_dispatch` triggers it instantly |
+
+---
+
+**Step 4: Submit your repo URL** in the format `https://github.com/USER/REPO` once the workflow has run successfully and the commit appears in your repo's history.
+
+
+
+The commit is being created successfully, but the **push is failing with a 403 permission error**. This is a common issue — you need to grant the workflow write permissions. Fix it two ways:
+
+---
+
+**Fix: Add `permissions` block to the workflow**Replace your existing workflow file with this one, then **also check this repo setting** — it's the other common cause of this exact error:
+
+> **Repo → Settings → Actions → General → Workflow permissions**
+> 
+> Make sure **"Read and write permissions"** is selected, then click Save.
+
+Then go to **Actions → Run workflow** manually again. The push should succeed this time.
+
 The practical rule of thumb: if you're already using systemd (any modern Linux distro), timers are worth the extra setup for anything serious. For quick personal scripts or anything needing maximum portability, cron is fine.
 
 
