@@ -1,0 +1,478 @@
+Building customer analytics in **dbt** is less like coding and more like city planning. Raw data is the chaotic harbor. Staging models are the customs officers. Marts are the skyline your business lives in. Let’s design it properly.
+
+---
+
+# 1️⃣ How to Build Customer Analytics Models in dbt
+
+Think in **layers**, not queries.
+
+### 🔹 Step 1: Start with Sources
+
+Declare raw tables explicitly.
+
+```yml
+sources:
+  - name: app
+    tables:
+      - name: customers
+      - name: orders
+      - name: payments
+```
+
+This makes lineage visible and testable.
+
+---
+
+### 🔹 Step 2: Create Staging Models (`stg_`)
+
+Purpose:
+
+* Clean
+* Rename
+* Cast types
+* Standardize fields
+
+Example: `stg_customers.sql`
+
+```sql
+select
+    id as customer_id,
+    lower(email) as email,
+    created_at::timestamp as created_at,
+    status
+from {{ source('app', 'customers') }}
+```
+
+Rules of staging:
+
+* One source table per model
+* No joins
+* No business logic
+* Just cleaning
+
+Staging is the laundromat. Not the fashion studio.
+
+---
+
+### 🔹 Step 3: Intermediate Models (`int_`)
+
+This is where logic starts forming.
+
+Example:
+
+* Calculate first_order_date
+* Customer lifetime revenue
+* Order aggregation
+
+```sql
+select
+    customer_id,
+    min(order_date) as first_order_date,
+    sum(order_amount) as lifetime_value
+from {{ ref('stg_orders') }}
+group by 1
+```
+
+---
+
+### 🔹 Step 4: Mart Models (`dim_`, `fct_`)
+
+This is where business users live.
+
+Typical customer mart structure:
+
+* `dim_customers`
+* `fct_orders`
+* `fct_payments`
+
+Example: `dim_customers.sql`
+
+```sql
+select
+    c.customer_id,
+    c.email,
+    c.created_at,
+    o.first_order_date,
+    o.lifetime_value
+from {{ ref('stg_customers') }} c
+left join {{ ref('int_customer_metrics') }} o
+    on c.customer_id = o.customer_id
+```
+
+Now you have analytics-ready customer data.
+
+---
+
+# 2️⃣ Best Practices for Staging and Mart Models
+
+## 🧱 Layer Discipline
+
+Follow this hierarchy:
+
+```
+sources → staging → intermediate → marts
+```
+
+Never:
+
+* Join raw tables directly in marts
+* Skip staging
+* Mix cleaning with business logic
+
+---
+
+## 🏷 Naming Conventions
+
+* `stg_` → cleaned source tables
+* `int_` → reusable logic
+* `dim_` → dimensions
+* `fct_` → fact tables
+
+Consistency reduces cognitive load.
+
+---
+
+## 🔄 Use `ref()` Everywhere
+
+Never hardcode table names.
+
+```sql
+from {{ ref('stg_orders') }}
+```
+
+This enables:
+
+* Dependency tracking
+* Automatic build ordering
+* Lineage graph
+
+---
+
+## 📦 Keep Models Atomic
+
+Each model should:
+
+* Do one clear thing
+* Be reusable
+* Be understandable in isolation
+
+If a model feels like a novel, split it.
+
+---
+
+## 📊 Star Schema for Customer Analytics
+
+Typical pattern:
+
+**Dimensions**
+
+* `dim_customers`
+* `dim_products`
+* `dim_date`
+
+**Facts**
+
+* `fct_orders`
+* `fct_payments`
+* `fct_sessions`
+
+Keep dimensions descriptive and facts additive.
+
+---
+
+# 3️⃣ How to Validate and Test dbt Models
+
+Now comes the part that separates “pipeline” from “production system.”
+
+---
+
+## ✅ Built-in Schema Tests
+
+In your YAML:
+
+```yml
+models:
+  - name: dim_customers
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - unique
+```
+
+Common tests:
+
+* `not_null`
+* `unique`
+* `accepted_values`
+* `relationships`
+
+Example relationship test:
+
+```yml
+- name: customer_id
+  tests:
+    - relationships:
+        to: ref('dim_customers')
+        field: customer_id
+```
+
+Prevents orphan records.
+
+---
+
+## 🧪 Custom Data Tests
+
+Create a SQL file in `tests/`.
+
+Example: ensure no negative revenue:
+
+```sql
+select *
+from {{ ref('fct_orders') }}
+where order_amount < 0
+```
+
+If this returns rows → test fails.
+
+Simple. Brutal. Effective.
+
+---
+
+## 🔍 Data Quality Checks for Customer Analytics
+
+Test things like:
+
+* No duplicate customers
+* Lifetime value ≥ 0
+* First order date ≥ created_at
+* No null emails for active users
+* Order date not in the future
+
+Analytics without validation is astrology.
+
+---
+
+## 📈 Snapshot for Slowly Changing Customers
+
+If customer attributes change:
+
+Use dbt snapshots to track history.
+
+```yml
+strategy: timestamp
+updated_at: updated_at
+```
+
+Now you can analyze churn and lifecycle changes correctly.
+
+---
+
+# 💡 Advanced Best Practices
+
+### 🔹 Materializations
+
+* `view` for staging
+* `table` or `incremental` for large fact tables
+* `ephemeral` for small intermediate logic
+
+---
+
+### 🔹 Incremental Models for Large Order Tables
+
+```sql
+{{ config(materialized='incremental') }}
+
+select ...
+from ...
+{% if is_incremental() %}
+  where updated_at > (select max(updated_at) from {{ this }})
+{% endif %}
+```
+
+Prevents full table rebuilds.
+
+---
+
+### 🔹 Documentation
+
+Run:
+
+```
+dbt docs generate
+dbt docs serve
+```
+
+Your lineage graph becomes a living map of your analytics system.
+
+---
+
+# 🧠 Summary Blueprint
+
+| Layer        | Purpose        | Rules              |
+| ------------ | -------------- | ------------------ |
+| Sources      | Raw ingestion  | Declare explicitly |
+| Staging      | Clean + rename | No joins           |
+| Intermediate | Reusable logic | Transformations    |
+| Marts        | Business-ready | Star schema        |
+
+---
+
+Time to mint a clean, analytics ready revenue mart. This model assumes you already have an intermediate model like `int_customer_orders` that contains cleaned order level data with fields such as:
+
+* `order_id`
+* `customer_id`
+* `order_date`
+* `order_value`
+* `discount_amount`
+* `tax_amount`
+* `shipping_amount`
+* `order_status`
+
+We will:
+
+* Use `{{ ref() }}`
+* Structure with CTEs
+* Apply business logic
+* Aggregate by month
+* Filter to last 30 days
+* Order chronologically
+* Add documentation comments
+
+---
+
+### 📁 `models/marts/fct_monthly_revenue.sql`
+
+```sql
+{{ config(
+    materialized = 'table',
+    tags = ['finance', 'revenue', 'mart']
+) }}
+
+-- ============================================================================
+-- Model: fct_monthly_revenue
+-- Purpose:
+--     Provides monthly revenue KPIs for BI dashboards.
+--     Focused on last 30 days of completed orders.
+-- Grain:
+--     One row per month.
+-- Business Logic:
+--     - Only completed orders contribute to revenue.
+--     - Net revenue excludes discounts.
+--     - Gross revenue includes tax + shipping.
+-- ============================================================================
+
+with orders as (
+
+    -- Pull cleaned, conformed order data
+    select *
+    from {{ ref('int_customer_orders') }}
+
+),
+
+filtered_orders as (
+
+    -- Business rule:
+    -- Only include completed/paid orders
+    -- Restrict to rolling 30-day analysis window
+    select
+        order_id,
+        customer_id,
+        order_date,
+        order_value,
+        coalesce(discount_amount, 0) as discount_amount,
+        coalesce(tax_amount, 0) as tax_amount,
+        coalesce(shipping_amount, 0) as shipping_amount
+    from orders
+    where order_status = 'completed'
+      and order_date >= current_date - interval '30 days'
+
+),
+
+enriched_revenue as (
+
+    -- Derive revenue metrics at order level
+    select
+        date_trunc('month', order_date) as revenue_month,
+
+        order_id,
+        customer_id,
+
+        order_value as gross_merchandise_value,
+
+        -- Net revenue after discounts
+        order_value - discount_amount as net_revenue,
+
+        -- Total collected including tax + shipping
+        order_value - discount_amount + tax_amount + shipping_amount 
+            as total_collected
+
+    from filtered_orders
+
+),
+
+monthly_aggregation as (
+
+    -- Aggregate metrics at monthly grain
+    select
+        revenue_month,
+
+        count(distinct order_id) as total_orders,
+        count(distinct customer_id) as unique_customers,
+
+        sum(gross_merchandise_value) as gross_merchandise_value,
+        sum(net_revenue) as net_revenue,
+        sum(total_collected) as total_collected,
+
+        -- Average order value (AOV)
+        case 
+            when count(distinct order_id) = 0 then 0
+            else sum(net_revenue) / count(distinct order_id)
+        end as avg_order_value
+
+    from enriched_revenue
+    group by revenue_month
+
+)
+
+-- Final output ordered chronologically
+select *
+from monthly_aggregation
+order by revenue_month asc
+```
+
+---
+
+## 🔎 What This Model Delivers
+
+Each row represents one month within the last 30 days window, including:
+
+* `total_orders`
+* `unique_customers`
+* `gross_merchandise_value`
+* `net_revenue`
+* `total_collected`
+* `avg_order_value`
+
+---
+
+## 🧱 Why This Follows dbt Best Practices
+
+✔ Uses `{{ ref() }}` for lineage tracking
+✔ Structured with logical CTE layers
+✔ Business rules are explicit and documented
+✔ Clear grain declaration
+✔ No raw tables referenced directly
+✔ Ordered for BI consumption
+✔ Clean naming: `fct_` prefix for fact mart
+
+---
+
+If you'd like, I can also provide:
+
+* A matching YAML file with schema tests
+* An incremental version for large datasets
+* A version optimized for Snowflake or BigQuery specifically
+* A companion `dim_customers` model
+
+Just tell me your warehouse and data volume.
