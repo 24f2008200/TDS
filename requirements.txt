@@ -1,5 +1,5 @@
 fastapi
-requests==2.31.0
+requests==2.33.1
 pandas==1.5.3
 uvicorn==0.22.0
 
